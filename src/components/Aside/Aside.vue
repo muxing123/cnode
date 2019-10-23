@@ -1,9 +1,21 @@
 <template>
   <div class="sidebar">
-    <div class="sidebar-top">
-      <div class="space">CNode：Node.js专业中文社区</div>
-      <div>您可以 <span @click="goTo('/signin')">登录</span> 或 <span @click="goTo('/signin')">注册</span>,也可以</div>
-      <div class="git">通过 GitHub 登录</div>
+    <img v-if="btnFlag" class="go-top" src="图片url" @click="backTop">
+<!--    侧边栏登录-->
+    <div>
+      <div class="user" v-if="this.$store.state.username">
+        <div class="header">个人信息</div>
+        <div class="content">
+          <div>{{this.$store.state.username}}</div>
+          <div>积分：0</div>
+          <div class="three">“这家伙很懒，什么个性签名都没有留下”</div>
+        </div>
+      </div>
+      <div class="sidebar-top" v-else>
+        <div class="space">CNode：Node.js专业中文社区</div>
+        <div>您可以 <span @click="goTo('/signin')">登录</span> 或 <span @click="goTo('/signin')">注册</span>,也可以</div>
+        <div class="git">通过 GitHub 登录</div>
+      </div>
     </div>
 <!--侧边栏图片部分-->
     <div class="sidebar-mid">
@@ -55,9 +67,37 @@ export default {
     //跳转登录页面
     goTo(path) {
       this.$router.push(path);
+    },
+    // 点击图片回到顶部方法，加计时器是为了过渡顺滑
+    backTop () {
+      const that = this
+      let timer = setInterval(() => {
+        let ispeed = Math.floor(-that.scrollTop / 5)
+        document.documentElement.scrollTop = document.body.scrollTop = that.scrollTop + ispeed
+        if (that.scrollTop === 0) {
+          clearInterval(timer)
+        }
+      }, 16)
+    },
+
+    // 为了计算距离顶部的高度，当高度大于60显示回顶部图标，小于60则隐藏
+    scrollToTop () {
+      const that = this
+      let scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop
+      that.scrollTop = scrollTop
+      if (that.scrollTop > 60) {
+        that.btnFlag = true
+      } else {
+        that.btnFlag = false
+      }
     }
   },
-  mounted() {},
+  mounted() {
+    window.addEventListener('scroll', this.scrollToTop)
+  },
+  destroyed () {
+    window.removeEventListener('scroll', this.scrollToTop)
+  },
   created() {},
   filters: {},
   computed: {},
@@ -71,6 +111,27 @@ export default {
   width: 290px;
   font-size: 14px;
   margin-bottom: 20px;
+  .user {
+    margin-bottom: 13px;
+    font-size: 13px;
+    background: white;
+    .header {
+      color: #51585c;
+      border-radius: 3px 3px 0 0;
+      padding: 10px;
+      background-color: #f6f6f6;
+    }
+    .content {
+      padding: 10px;
+      border-radius: 0 0 3px 3px;
+      div {
+        margin-bottom: 10px;
+      }
+      .three {
+        font-style: italic;
+      }
+    }
+  }
   .sidebar-top {
     font-size: 13px;
     margin-bottom: 13px;

@@ -1,7 +1,7 @@
 <template>
   <div class="main">
     <div class="main-left">
-<!--内容分类-->
+      <!--内容分类-->
       <div class="top">
         <a :class="{ green: num === 0 }" @click="set(0)">全部</a>
         <a :class="{ green: num === 1 }" @click="set(1)">精华</a>
@@ -10,8 +10,15 @@
         <a :class="{ green: num === 4 }" @click="set(4)">招聘</a>
         <a :class="{ green: num === 5 }" @click="set(5)">客户端测试</a>
       </div>
-<!--帖子部分-->
-      <div class="inner" v-for="(item, index) in list" :key="index">
+      <!--帖子部分-->
+      <div
+        class="inner"
+        v-for="(item, index) in list.slice(
+          pages * (pagesNum - 1),
+          pagesNum * pages
+        )"
+        :key="index"
+      >
         <img :src="item.author.avatar_url" alt="" />
         <span class="count">
           <span class="count-reply">{{ item.reply_count }}</span>
@@ -24,31 +31,43 @@
         <span class="put-tab" v-if="item.top === false && item.tab === 'ask'"
           >问答</span
         >
-        <div class="title" @click="goTo('/details')">{{ item.title }}</div>
+        <div class="title" @click="goTo(item)">{{ item.title }}</div>
         <div class="reply-date" v-if="item.day">{{ item.day }}天前</div>
         <div class="reply-date" v-if="item.hours">{{ item.hours }}小时前</div>
         <div class="reply-date" v-if="item.min">{{ item.min }}分钟前</div>
       </div>
-<!--翻页部分-->
-      <div class="page"></div>
+      <!--翻页部分-->
+      <div class="page">
+        <Pagination
+          @handleSizeChange="handleSizeChange"
+          @handleCurrentChange="handleCurrentChange"
+        ></Pagination>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import Pagination from "../Pagination/Pagination";
+import { Loading } from "element-ui";
 export default {
   name: "Main",
-  components: {},
+  components: {
+    Pagination
+  },
   props: {},
   data() {
     return {
       num: 0,
-      list: []
+      list: [],
+      pages: 40,
+      pagesNum: 1,
+      loadingInstance: "null"
     };
   },
   methods: {
-    goTo(path) {
-      this.$router.push(path);
+    goTo(item) {
+      this.$router.push({ name: "details", query: { id: item.id } });
     },
     set(data) {
       this.num = data;
@@ -58,6 +77,12 @@ export default {
         .req("api/topics")
         .then(res => {
           this.list = res.data;
+          //页面加载效果
+          if (this.list.length > 0) {
+            this.$nextTick(() => {
+              this.loadingInstance.close();
+            });
+          }
           let nowTime = Date.now();
           this.list.map(item => {
             let different = nowTime - this.$dayjs(item.last_reply_at).valueOf();
@@ -78,11 +103,25 @@ export default {
         .catch(err => {
           console.log(err);
         });
+    },
+    //  改变每页条数
+    handleSizeChange(data) {
+      this.pages = data;
+      console.log(this.pages);
+    },
+    //  改变当前页
+    handleCurrentChange(data) {
+      this.pagesNum = data;
+      console.log(this.pagesNum);
     }
   },
   mounted() {
     this.getArticle();
-    this.time();
+    //页面加载效果
+    this.loadingInstance = Loading.service({ text: "加载中..." });
+    // this.$nextTick(() => {
+    //   this.getArticle()
+    // })
   },
   created() {},
   filters: {},
@@ -193,6 +232,10 @@ export default {
         font-size: 11px;
         text-align: right;
       }
+    }
+    /* 翻页部分样式*/
+    .page {
+      margin-top: 10px;
     }
   }
 }

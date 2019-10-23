@@ -26,10 +26,13 @@
             <a href="/">关于</a>
           </div>
           <div>
-            <a href="/">注册</a>
+            <a href="/signin">注册</a>
           </div>
           <div>
-            <a href="/">登录</a>
+            <a href="/signin">登录</a>
+          </div>
+          <div v-if="this.$store.state.username">
+            <a href="/main">退出</a>
           </div>
         </div>
       </div>
